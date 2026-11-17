@@ -1,0 +1,42 @@
+{
+ "built_at": "2026-11-17T05:47:36+00:00",
+ "client_identification": "ipo-backtest-research/0.1 (automated research client)",
+ "sources": [
+  {
+   "name": "Nasdaq IPO calendar",
+   "url": "https://api.nasdaq.com/api/ipo/calendar?date=YYYY-MM",
+   "fields": "deal id, symbol, company, exchange, offer price, shares offered, pricing date",
+   "months": [
+    "2011-07",
+    "2026-11"
+   ]
+  },
+  {
+   "name": "Nasdaq IPO deal overview",
+   "url": "https://api.nasdaq.com/api/ipo/overview/?dealId=...",
+   "fields": "CIK, shares outstanding after offering, offering expenses, lock-up, employees"
+  },
+  {
+   "name": "SEC EDGAR submissions",
+   "url": "https://data.sec.gov/submissions/CIK##########.json",
+   "fields": "SIC code, filing index (form, filing date, 8-K items, accession numbers), current tickers"
+  },
+  {
+   "name": "SEC EDGAR XBRL company facts",
+   "url": "https://data.sec.gov/api/xbrl/companyfacts/CIK##########.json",
+   "fields": "financial-statement facts, selected by the accession number of the first 10-Q/10-K after the IPO"
+  },
+  {
+   "name": "Yahoo Finance chart",
+   "url": "https://query1.finance.yahoo.com/v8/finance/chart/SYMBOL",
+   "fields": "daily open/high/low/close/adjusted close/volume, splits, dividends; ETF and index series"
+  }
+ ],
+ "files": {
+  "universe.csv": "113d35ab96ec80a3b97f238b9044a9e7c0ffcefffd0fff5c3d63bf0a9de729cd",
+  "first_report.csv": "067449dee0a4d55ed8d730ce857ba513bcd33b4da97d15d7b9ce2028d9407ea3",
+  "prices.csv.gz": "8e9a8faed0282201ebcace8e97a6d8d1c06212006c1be4e3df3f662a8dd0dfc2",
+  "bench.csv.gz": "def07c175ea8707eb53d9df017896a303219fb87d52efd404cca757a6f7f9e93"
+ },
+ "data_hash": "22dc77a8a0861d22f6e755cd5798923c4135d3369aaedf59526068ac303f47c1"
+}

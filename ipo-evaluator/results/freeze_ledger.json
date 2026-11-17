@@ -1,0 +1,33 @@
+{
+ "freezes": [
+  {
+   "rule_version": "v1.0.0",
+   "rule_hash": "6a1aac31ace6980416927d477584b96b0f6a3c832a2fa5c9be7341e66eb1d2ac",
+   "frozen_at": "2026-11-17T05:48:24+00:00",
+   "git_commit_at_freeze": "1257435a3dded9ad74db326a2f7d00d981a0dd84"
+  }
+ ],
+ "unsealings": [
+  {
+   "at": "2026-11-17T05:49:27+00:00",
+   "rule_version": "v1.0.0",
+   "rule_hash": "6a1aac31ace6980416927d477584b96b0f6a3c832a2fa5c9be7341e66eb1d2ac",
+   "run_id": "test-c45c835418",
+   "git_commit": "d3a9e2cd7f3982d078b96b747b8321d3f48b1cb4"
+  },
+  {
+   "at": "2026-11-17T05:51:02+00:00",
+   "rule_version": "v1.0.0",
+   "rule_hash": "6a1aac31ace6980416927d477584b96b0f6a3c832a2fa5c9be7341e66eb1d2ac",
+   "run_id": "test-c45c835418",
+   "git_commit": "d3a9e2cd7f3982d078b96b747b8321d3f48b1cb4"
+  },
+  {
+   "at": "2026-11-17T05:52:56+00:00",
+   "rule_version": "v1.0.0",
+   "rule_hash": "6a1aac31ace6980416927d477584b96b0f6a3c832a2fa5c9be7341e66eb1d2ac",
+   "run_id": "test-c45c835418",
+   "git_commit": "a5b0eea12b2f3fa1d008db9284c608c7eddf90ea"
+  }
+ ]
+}
