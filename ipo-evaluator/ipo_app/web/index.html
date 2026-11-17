@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IPO Evaluator</title>
+<style>
+:root{
+  color-scheme: light;
+  --bg:#f5f4f1; --surface:#fcfcfb; --border:#dddbd5; --text:#0b0b0b; --text2:#52514e; --muted:#7a7872;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --grid:#e6e4de;
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b; --accent:#2a78d6;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#121211; --surface:#1a1a19; --border:#383835; --text:#f0efec; --text2:#c3c2b7; --muted:#8f8e85;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --grid:#2b2b29; --accent:#3987e5;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#121211; --surface:#1a1a19; --border:#383835; --text:#f0efec; --text2:#c3c2b7; --muted:#8f8e85;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --grid:#2b2b29; --accent:#3987e5;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:14px 16px 0;max-width:1180px;margin:0 auto}
+h1{font-size:20px;margin:0 0 2px} h2{font-size:16px;margin:0 0 10px} h3{font-size:14px;margin:14px 0 6px}
+.sub{color:var(--text2);margin:0 0 10px}
+main{max-width:1180px;margin:0 auto;padding:0 16px 60px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-top:10px}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;font:inherit;color:var(--text2);cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:14px}
+.banner{border-left:5px solid var(--crit);}
+.banner.ok{border-left-color:var(--good)} .banner.mid{border-left-color:var(--warn)}
+.badge{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:1px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.badge.BUY{border-color:var(--good)} .badge.AVOID{border-color:var(--crit)} .badge.WAIT{border-color:var(--warn)}
+.badge.ABSTAIN,.badge.INELIGIBLE,.badge.NO_DECISION{border-color:var(--muted);color:var(--text2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px 12px}
+label{display:block;font-size:12px;color:var(--text2)}
+input,select{width:100%;padding:6px 7px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:inherit}
+button.primary{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+button.ghost{background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font:inherit;color:var(--text);cursor:pointer}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--grid);text-align:right;white-space:nowrap}
+th{color:var(--text2);font-weight:600;font-size:12px} th:first-child,td:first-child{text-align:left}
+td.l,th.l{text-align:left}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{border:1px solid var(--border);border-radius:8px;padding:10px}
+.kpi b{display:block;font-size:20px} .kpi span{color:var(--text2);font-size:12px}
+.muted{color:var(--muted)} .small{font-size:12px} code{font-family:ui-monospace,Menlo,monospace;font-size:12px;word-break:break-all}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin:2px 0 4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+svg text{fill:var(--text2);font-size:11px}
+#tip{position:fixed;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,.18);display:none;z-index:9;max-width:260px}
+.hide{display:none}
+.pill{font-size:11px;color:var(--text2);border:1px solid var(--border);border-radius:4px;padding:0 5px;margin-left:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>IPO Evaluator</h1>
+  <p class="sub">Rule-based IPO screening with a mandatory historical validation record. Not investment advice.</p>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-val" aria-selected="true">Historical Validation</button>
+    <button role="tab" id="tab-eval" aria-selected="false">Evaluate an IPO</button>
+  </div>
+</header>
+<main>
+<div id="status" class="card banner"></div>
+
+<section id="view-val">
+  <div class="card">
+    <div class="row">
+      <div style="min-width:260px;flex:1"><label>Run</label><select id="run"></select></div>
+      <div><label>Result set</label><select id="set"></select></div>
+      <div><label>Access / decision stage</label><select id="mode">
+        <option value="A_retail">Retail: buy at 2nd-day open (primary)</option>
+        <option value="A_offer">Allocation at the offer price</option>
+        <option value="B_post_report">Retail: after first 10-Q/10-K</option></select></div>
+    </div>
+    <div id="manifest" class="small" style="margin-top:10px"></div>
+  </div>
+  <div class="card"><h2>Net returns at fixed horizons</h2>
+    <p class="sub small">Returns are net of spreads/slippage and include dividends, splits and delisting outcomes. "Excess" is versus SPY bought and sold on the same dates. Intervals are 95% bootstrap intervals clustered by entry quarter.</p>
+    <div class="two"><div><div class="legend" id="lg1"></div><svg id="ch1" width="100%" height="250"></svg></div>
+    <div class="scroll" id="tblH"></div></div>
+  </div>
+  <div class="card"><h2>Buy recommendations: hits, false positives, missed winners</h2><div id="cls"></div></div>
+  <div class="card"><h2>Capital-constrained account</h2>
+    <p class="sub small">$100,000 start, 5% of equity per position, at most 20 positions, 12-month holds, idle cash in T-bills. "Same trades in SPY" buys SPY instead of each IPO on the same dates.</p>
+    <div class="two"><div><div class="legend" id="lg2"></div><svg id="ch2" width="100%" height="250"></svg></div><div class="scroll" id="tblP"></div></div>
+  </div>
+  <div class="card"><h2>Probability calibration</h2><div class="two"><div><svg id="ch3" width="100%" height="250"></svg></div><div class="scroll" id="tblC"></div></div></div>
+  <div class="card"><h2>By IPO year, sector and market conditions (12-month excess return vs SPY)</h2>
+    <div class="legend" id="lg4"></div><svg id="ch4" width="100%" height="230"></svg>
+    <div class="two"><div class="scroll" id="tblY"></div><div class="scroll" id="tblS"></div></div><div class="scroll" id="tblR"></div></div>
+  <div class="card" id="sensCard"><h2>Sensitivity and dependence on a few winners</h2><div class="scroll" id="tblSens"></div><div id="win" style="margin-top:10px"></div></div>
+  <div class="card" id="covCard"><h2>Data coverage</h2><div id="cov"></div></div>
+  <div class="card"><h2>Individual decisions</h2>
+    <div class="row">
+      <div><label>Recommendation</label><select id="fRec"><option value="">all</option><option>BUY</option><option>WAIT</option><option>AVOID</option><option>ABSTAIN</option><option>NO_DECISION</option></select></div>
+      <div><label>Action</label><select id="fAct"><option value="">all</option><option>BUY</option><option>NO_TRADE</option><option>BUY_NO_PRICE_DATA</option></select></div>
+      <div><label>Search</label><input id="fQ" placeholder="symbol or company"></div>
+      <div class="small muted" id="pg"></div>
+      <button class="ghost" id="prev">Prev</button><button class="ghost" id="next">Next</button>
+    </div>
+    <div class="scroll" id="tblD" style="margin-top:8px"></div>
+  </div>
+  <div class="card"><h2>Frozen rule versions and unsealing ledger</h2><div class="scroll" id="rules"></div></div>
+  <div class="card"><h2>Downloads</h2><div id="dl"></div></div>
+</section>
+
+<section id="view-eval" class="hide">
+  <div class="card" id="evalStatic" style="display:none">The evaluator needs the local server: run <code>python -m ipo_app.server</code> and open <code>http://127.0.0.1:8765</code>.</div>
+  <div class="card" id="evalForm">
+    <div class="row" style="justify-content:space-between"><h2>Inputs</h2><div><button class="ghost" id="ex">Load example</button> <button class="ghost" id="clr">Clear</button></div></div>
+    <p class="sub small">Leave a field empty when the figure is unknown. Empty is treated as missing, never as zero.</p>
+    <h3>Offering</h3><div class="grid" id="g1"></div>
+    <h3>Dilutive securities</h3><div class="grid" id="g2"></div>
+    <h3>Financial statements (annualised flows, latest balance sheet)</h3><div class="grid" id="g3"></div>
+    <h3>Market conditions</h3><div class="grid" id="g4"></div>
+    <div style="margin-top:12px"><button class="primary" id="go">Evaluate</button> <span id="err" class="small" style="color:var(--crit)"></span></div>
+  </div>
+  <div id="evalOut"></div>
+</section>
+</main>
+<div id="tip"></div>
+<script>
+const STATIC = window.__STATIC__ || null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pct = (x, d=1) => (x === null || x === undefined || x === "" || isNaN(x)) ? "–" : (x*100).toFixed(d) + "%";
+const num = (x, d=0) => (x === null || x === undefined || x === "" || isNaN(x)) ? "–" : Number(x).toLocaleString(undefined,{maximumFractionDigits:d});
+const usd = x => (x === null || x === undefined || isNaN(x)) ? "–" : (Math.abs(x) >= 1e9 ? "$"+(x/1e9).toFixed(2)+"B" : Math.abs(x) >= 1e6 ? "$"+(x/1e6).toFixed(1)+"M" : "$"+Number(x).toLocaleString(undefined,{maximumFractionDigits:2}));
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+async function api(path){ if(STATIC) return null; const r = await fetch(path); return r.json(); }
+function table(el, head, rows){ $(el).innerHTML = "<table><thead><tr>"+head.map((h,i)=>`<th${i?"":" class=l"}>${h}</th>`).join("")+"</tr></thead><tbody>"+rows.map(r=>"<tr>"+r.map((c,i)=>`<td${i?"":" class=l"}>${c}</td>`).join("")+"</tr>").join("")+"</tbody></table>"; }
+const tip = $("tip");
+function showTip(e, html){ tip.innerHTML = html; tip.style.display = "block"; const w = tip.offsetWidth; tip.style.left = Math.min(e.clientX+12, innerWidth-w-8)+"px"; tip.style.top = (e.clientY+12)+"px"; }
+function hideTip(){ tip.style.display = "none"; }
+const svgEl = (t, a) => { const e = document.createElementNS("http://www.w3.org/2000/svg", t); for(const k in a) e.setAttribute(k, a[k]); return e; };
+function legend(el, items){ $(el).innerHTML = items.map(([c,l])=>`<span><i style="background:var(${c})"></i>${l}</span>`).join(""); }
+
+/* ---------- charts ---------- */
+function niceTicks(lo, hi, n=5){ const span = hi-lo || 1, step0 = span/n, mag = Math.pow(10, Math.floor(Math.log10(step0))); const step = [1,2,2.5,5,10].map(m=>m*mag).find(s=>s>=step0) || step0; const out=[]; for(let v=Math.ceil(lo/step)*step; v<=hi+1e-9; v+=step) out.push(+v.toFixed(10)); return out; }
+function barChart(id, cats, series, opts={}){
+  // series: [{name, color, values:[..], lo:[..], hi:[..], n:[..]}]; one shared y axis (percent)
+  const svg = $(id); svg.innerHTML = ""; const W = svg.clientWidth || 520, Hh = +svg.getAttribute("height"), m = {l:46,r:10,t:10,b:26};
+  const vals = series.flatMap(s => s.values.concat(s.lo||[], s.hi||[])).filter(v => v !== null && v !== undefined && !isNaN(v));
+  if(!vals.length){ svg.appendChild(svgEl("text",{x:W/2,y:Hh/2,"text-anchor":"middle"})).textContent = "no completed observations"; return; }
+  let lo = Math.min(0, ...vals), hi = Math.max(0, ...vals); const pad = (hi-lo)*0.08 || 0.01; lo -= pad; hi += pad;
+  const y = v => m.t + (hi-v)/(hi-lo)*(Hh-m.t-m.b), bw = (W-m.l-m.r)/cats.length, k = series.length, w = Math.min(26, (bw-14)/k - 2);
+  for(const t of niceTicks(lo,hi)){ svg.appendChild(svgEl("line",{x1:m.l,x2:W-m.r,y1:y(t),y2:y(t),stroke:css("--grid"),"stroke-width":t===0?1.5:1})); const tx = svgEl("text",{x:m.l-6,y:y(t)+4,"text-anchor":"end"}); tx.textContent = (t*100).toFixed(0)+"%"; svg.appendChild(tx); }
+  cats.forEach((c,i) => { const cx = m.l + bw*i + bw/2; const tx = svgEl("text",{x:cx,y:Hh-8,"text-anchor":"middle"}); tx.textContent = c; svg.appendChild(tx);
+    series.forEach((s,j) => { const v = s.values[i]; if(v === null || v === undefined || isNaN(v)) return;
+      const x = cx - (k*(w+2)-2)/2 + j*(w+2), y0 = y(0), y1 = y(v), h = Math.max(Math.abs(y1-y0), 1), top = Math.min(y0,y1), r = Math.min(4, h, w/2);
+      const d = v >= 0 ? `M${x},${y0} V${top+r} Q${x},${top} ${x+r},${top} H${x+w-r} Q${x+w},${top} ${x+w},${top+r} V${y0} Z`
+                       : `M${x},${y0} V${top+h-r} Q${x},${top+h} ${x+r},${top+h} H${x+w-r} Q${x+w},${top+h} ${x+w},${top+h-r} V${y0} Z`;
+      svg.appendChild(svgEl("path",{d,fill:css(s.color)}));
+      if(s.lo && s.lo[i] !== null && s.lo[i] !== undefined){ const xm = x+w/2; svg.appendChild(svgEl("line",{x1:xm,x2:xm,y1:y(s.lo[i]),y2:y(s.hi[i]),stroke:css("--text"),"stroke-width":1.2})); for(const e of [s.lo[i],s.hi[i]]) svg.appendChild(svgEl("line",{x1:xm-4,x2:xm+4,y1:y(e),y2:y(e),stroke:css("--text"),"stroke-width":1.2})); }
+      const hit = svgEl("rect",{x:x-2,y:m.t,width:w+4,height:Hh-m.t-m.b,fill:"transparent"});
+      hit.addEventListener("mousemove", e => showTip(e, `<b>${esc(s.name)}</b> · ${esc(c)}<br>${opts.label||"mean excess"}: ${pct(v)}${s.lo&&s.lo[i]!=null?`<br>95% interval: ${pct(s.lo[i])} to ${pct(s.hi[i])}`:""}${s.n?`<br>n = ${num(s.n[i])}`:""}`));
+      hit.addEventListener("mouseleave", hideTip); svg.appendChild(hit); }); });
+}
+function lineChart(id, dates, series){
+  const svg = $(id); svg.innerHTML = ""; const W = svg.clientWidth || 520, Hh = +svg.getAttribute("height"), m = {l:52,r:96,t:10,b:24};
+  const all = series.flatMap(s=>s.values).filter(v=>v!=null); if(!all.length || dates.length < 2){ svg.appendChild(svgEl("text",{x:W/2,y:Hh/2,"text-anchor":"middle"})).textContent = "no trades"; return; }
+  const lo = Math.min(...all)*0.97, hi = Math.max(...all)*1.03, n = dates.length;
+  const x = i => m.l + i/(n-1)*(W-m.l-m.r), y = v => m.t + (hi-v)/(hi-lo)*(Hh-m.t-m.b);
+  for(const t of niceTicks(lo,hi,4)){ svg.appendChild(svgEl("line",{x1:m.l,x2:W-m.r,y1:y(t),y2:y(t),stroke:css("--grid")})); const tx = svgEl("text",{x:m.l-6,y:y(t)+4,"text-anchor":"end"}); tx.textContent = "$"+(t/1000).toFixed(0)+"k"; svg.appendChild(tx); }
+  let lastYear = ""; dates.forEach((d,i)=>{ const yr = d.slice(0,4); if(yr !== lastYear && i > 0){ const tx = svgEl("text",{x:x(i),y:Hh-6,"text-anchor":"middle"}); tx.textContent = yr; svg.appendChild(tx);} lastYear = yr; });
+  const ends = [];
+  series.forEach(s => { const pts = s.values.map((v,i)=> v==null ? null : `${x(i).toFixed(1)},${y(v).toFixed(1)}`).filter(Boolean); svg.appendChild(svgEl("polyline",{points:pts.join(" "),fill:"none",stroke:css(s.color),"stroke-width":2,"stroke-linejoin":"round"}));
+    const li = s.values.length-1; ends.push({s, yy:y(s.values[li])}); });
+  ends.sort((a,b)=>a.yy-b.yy); for(let i=1;i<ends.length;i++) if(ends[i].yy - ends[i-1].yy < 13) ends[i].yy = ends[i-1].yy + 13;
+  ends.forEach(e => { const tx = svgEl("text",{x:W-m.r+6,y:e.yy+4}); tx.textContent = e.s.name; svg.appendChild(tx); });
+  const cross = svgEl("line",{y1:m.t,y2:Hh-m.b,stroke:css("--muted"),"stroke-dasharray":"3 3",visibility:"hidden"}); svg.appendChild(cross);
+  const hit = svgEl("rect",{x:m.l,y:m.t,width:W-m.l-m.r,height:Hh-m.t-m.b,fill:"transparent"});
+  hit.addEventListener("mousemove", e => { const bb = svg.getBoundingClientRect(); const i = Math.max(0, Math.min(n-1, Math.round((e.clientX-bb.left-m.l)/(W-m.l-m.r)*(n-1)))); cross.setAttribute("x1",x(i)); cross.setAttribute("x2",x(i)); cross.setAttribute("visibility","visible");
+    showTip(e, `<b>${dates[i]}</b><br>`+series.map(s=>`${esc(s.name)}: ${s.values[i]==null?"–":"$"+num(s.values[i])}`).join("<br>")); });
+  hit.addEventListener("mouseleave", ()=>{ cross.setAttribute("visibility","hidden"); hideTip(); }); svg.appendChild(hit);
+}
+function calibChart(id, rows){
+  const svg = $(id); svg.innerHTML = ""; const W = svg.clientWidth || 420, Hh = +svg.getAttribute("height"), m = {l:46,r:14,t:10,b:34};
+  if(!rows || !rows.length){ svg.appendChild(svgEl("text",{x:W/2,y:Hh/2,"text-anchor":"middle"})).textContent = "no probabilities with completed outcomes"; return; }
+  const hi = Math.max(0.6, ...rows.map(r=>Math.max(r.mean_forecast,r.observed_rate)))*1.08, x = v => m.l + v/hi*(W-m.l-m.r), y = v => Hh-m.b - v/hi*(Hh-m.t-m.b);
+  for(const t of niceTicks(0,hi,4)){ svg.appendChild(svgEl("line",{x1:m.l,x2:W-m.r,y1:y(t),y2:y(t),stroke:css("--grid")})); let tx = svgEl("text",{x:m.l-6,y:y(t)+4,"text-anchor":"end"}); tx.textContent = (t*100).toFixed(0)+"%"; svg.appendChild(tx); tx = svgEl("text",{x:x(t),y:Hh-m.b+14,"text-anchor":"middle"}); tx.textContent = (t*100).toFixed(0)+"%"; svg.appendChild(tx); }
+  svg.appendChild(svgEl("line",{x1:x(0),y1:y(0),x2:x(hi),y2:y(hi),stroke:css("--muted"),"stroke-dasharray":"4 4"}));
+  let tx = svgEl("text",{x:(m.l+W-m.r)/2,y:Hh-4,"text-anchor":"middle"}); tx.textContent = "forecast probability of beating SPY (bin mean)"; svg.appendChild(tx);
+  tx = svgEl("text",{x:x(hi)-4,y:y(hi)+14,"text-anchor":"end"}); tx.textContent = "perfect calibration"; svg.appendChild(tx);
+  rows.forEach(r => { const c = svgEl("circle",{cx:x(r.mean_forecast),cy:y(r.observed_rate),r:6,fill:css("--s1"),stroke:css("--surface"),"stroke-width":2});
+    c.addEventListener("mousemove", e => showTip(e, `Bin ${r.bin} (n = ${r.n})<br>forecast: ${pct(r.mean_forecast)}<br>observed: ${pct(r.observed_rate)}`)); c.addEventListener("mouseleave", hideTip); svg.appendChild(c); });
+}
+
+/* ---------- validation view ---------- */
+let RUNS = [], SUMMARY = null, STATUS = null, page = 0; const PAGE = 50;
+function modesOf(){ const set = $("set").value; if(!SUMMARY) return null;
+  if(set === "walkforward") return SUMMARY.walk_forward && SUMMARY.walk_forward.modes;
+  if(set.startsWith("period:")) return SUMMARY.by_period && SUMMARY.by_period[set.slice(7)];
+  return SUMMARY.modes; }
+function renderStatus(){
+  const v = STATUS.validation || {}; const el = $("status"); el.className = "card banner " + (v.verdict === "SUPPORTED" ? "ok" : (v.verdict === "INCONCLUSIVE" ? "mid" : ""));
+  el.innerHTML = `<div class="row" style="justify-content:space-between;align-items:start"><div><div class="small muted">Historical validation status</div><h2 style="margin:2px 0 4px">${esc(v.label||"NOT HISTORICALLY VALIDATED")}</h2></div>
+    <div><span class="badge">${v.verdict==="SUPPORTED"?"✓":"⚠"} Pre-registered verdict: ${esc(v.verdict||"NO TEST RUN")}</span></div></div>
+    <div>${esc(v.summary||"")}</div>${(v.criteria||[]).length?`<div class="scroll" style="margin-top:8px"><table><thead><tr><th class=l>Pre-registered criterion</th><th class=l>Result</th><th>Met</th></tr></thead><tbody>${v.criteria.map(c=>`<tr><td class=l>${esc(c.name)}</td><td class=l>${esc(c.result)}</td><td>${c.met===true?"✓ yes":c.met===false?"✗ no":"n/a"}</td></tr>`).join("")}</tbody></table></div>`:""}
+    ${v.rule_version?`<div class="small muted" style="margin-top:6px">Rule ${esc(v.rule_version)} · hash <code>${esc((v.rule_hash||"").slice(0,16))}</code> · run <code>${esc(v.run_id||"")}</code></div>`:""}`;
+}
+function renderManifest(m){
+  $("manifest").innerHTML = `<div class="scroll"><table><tbody>
+   <tr><td class=l>Scope</td><td class=l>${esc(SUMMARY.scope||"")}</td></tr>
+   <tr><td class=l>Rule version</td><td class=l>${esc(m.rule_version)} ${m.rules_frozen?'<span class="pill">frozen</span>':'<span class="pill">not frozen</span>'} · hash <code>${esc(m.rule_hash)}</code></td></tr>
+   <tr><td class=l>Data snapshot</td><td class=l>hash <code>${esc(m.data_hash)}</code> · built ${esc(m.data_built_at||"")} · last market date ${esc(m.snapshot_last_market_date||"")}</td></tr>
+   <tr><td class=l>Code</td><td class=l>git <code>${esc(m.git_commit||"")}</code>${m.git_dirty?" (uncommitted changes when run)":""}${m.freeze_commit?` · rules frozen in <code>${esc(m.freeze_commit)}</code>`:""}</td></tr>
+   <tr><td class=l>Execution</td><td class=l>${m.config.cost_bps_stock} bps/side on IPO shares, ${m.config.cost_bps_etf} bps/side on ETFs, watchlist ${m.config.wait_days} trading days, delisting haircuts ${esc(JSON.stringify(m.config.delist_haircut))}, bootstrap seed ${m.bootstrap_seed}</td></tr>
+   <tr><td class=l>Reproduce</td><td class=l><code>python -m ipo_app.data.build && python -m ipo_app.backtest.run ${esc(m.command)}</code> — identical rule hash, data hash and config reproduce run id <code>${esc(m.run_id)}</code></td></tr></tbody></table></div>`;
+}
+function renderMode(){
+  const modes = modesOf(), mode = $("mode").value, s = modes && modes[mode];
+  const ids = ["tblH","cls","tblP","tblC","tblY","tblS","tblR"]; if(!s){ ids.forEach(i=>$(i).innerHTML = '<span class="muted">No results for this selection.</span>'); ["ch1","ch2","ch3","ch4"].forEach(i=>$(i).innerHTML=""); return; }
+  const H = ["1m","3m","6m","12m"], groups = [["strategy","Strategy BUYs","--s1"],["buy_all","Buy every eligible IPO","--s2"],["screen","Simple screen","--s3"]];
+  legend("lg1", groups.map(g=>[g[2],g[1]]));
+  barChart("ch1", H.map(h=>h.replace("m"," mo")), groups.map(g => ({name:g[1], color:g[2], values:H.map(h=>(s[g[0]][h]||{}).mean_excess ?? null), lo:H.map(h=>((s[g[0]][h]||{}).excess_ci||{}).ci_lo ?? null), hi:H.map(h=>((s[g[0]][h]||{}).excess_ci||{}).ci_hi ?? null), n:H.map(h=>(s[g[0]][h]||{}).n)})), {label:"mean excess vs SPY"});
+  const rows = []; for(const h of H) for(const g of groups){ const r = s[g[0]][h] || {}; const ci = r.excess_ci || {};
+    rows.push([`${h} · ${g[1]}`, num(r.n), num(r.n_incomplete), num(r.n_delisted_before_horizon), pct(r.mean_ret), pct(r.median_ret), pct(r.mean_bench), `${pct(r.mean_excess)} <span class=muted>[${pct(ci.ci_lo)}, ${pct(ci.ci_hi)}]</span>`, pct(r.mean_excess_vs_sector), pct(r.mean_excess_vs_iwm), pct(r.mean_excess_vs_ipoetf), pct(r.pct_outperform), pct(r.std_ret), pct(r.worst), pct(r.p05)]); }
+  for(const h of H){ const d = (s.diff_vs_buy_all||{})[h]; if(d && d.estimate != null) rows.push([`${h} · Strategy minus buy-all`, `${num(d.n_a)} vs ${num(d.n_b)}`,"","","","","", `${pct(d.estimate)} <span class=muted>[${pct(d.ci_lo)}, ${pct(d.ci_hi)}]</span>`,"","","","","","",""]); }
+  table("tblH", ["Horizon · group","n","incomplete","delisted","mean net","median net","SPY same dates","mean excess vs SPY [95%]","vs sector ETF","vs IWM","vs IPO ETF","% beat SPY","volatility","worst","5th pct"], rows);
+  const c = s.classification_12m || {}, rc = s.recommendations || {}, ac = s.actions || {};
+  $("cls").innerHTML = `<div class="kpis">
+    <div class="kpi"><b>${num(s.n_buy)}</b><span>BUY trades (${num(s.n_buy_after_wait)} after waiting) of ${num(s.n_eligible)} eligible IPOs</span></div>
+    <div class="kpi"><b>${pct(s.abstention_rate)}</b><span>abstention rate (not bought)</span></div>
+    <div class="kpi"><b>${pct(c.precision)}</b><span>of BUYs beat SPY at 12 months (${num(c.buys_outperform)} of ${num(c.n_buys_with_outcome)})</span></div>
+    <div class="kpi"><b>${num(c.false_positives)}</b><span>false positives (BUYs that lagged SPY)</span></div>
+    <div class="kpi"><b>${num(c.missed_winners)}</b><span>missed winners (${pct(c.missed_winner_rate)} of ${num(c.winners_total)} IPOs that beat SPY)</span></div>
+    <div class="kpi"><b>${pct(c.base_rate_winners)}</b><span>base rate: share of all eligible IPOs that beat SPY</span></div></div>
+    <p class="small muted" style="margin:8px 0 0">Initial recommendations: ${Object.entries(rc).map(([k,v])=>`${k} ${v}`).join(" · ")}. Final actions: ${Object.entries(ac).map(([k,v])=>`${k} ${v}`).join(" · ")}. Gates triggered: ${Object.entries(s.gates_triggered||{}).map(([k,v])=>`${k} ${v}`).join(" · ")||"none"}. No decision: ${Object.entries(s.no_decision_reasons||{}).map(([k,v])=>`${k} ${v}`).join(" · ")||"none"}.</p>`;
+  const P = s.portfolio || {}, ps = P.strategy;
+  if(ps){ legend("lg2", [["--s1","Strategy"],["--s2","Same trades in SPY"],["--s3","SPY buy & hold"]]);
+    lineChart("ch2", ps.curve.dates, [{name:"Strategy",color:"--s1",values:ps.curve.equity},{name:"Same trades, SPY",color:"--s2",values:ps.curve.matched_spy},{name:"SPY buy & hold",color:"--s3",values:ps.curve.spy_buy_hold}]); } else { $("ch2").innerHTML = ""; $("lg2").innerHTML = ""; }
+  const prow = (label, st) => st ? [label, pct(st.total_return), pct(st.cagr), pct(st.ann_vol), pct(st.max_drawdown), pct(st.worst_day), st.n_trades_taken!=null?`${num(st.n_trades_taken)} / ${num(st.n_trades_offered)}`:"", st.avg_invested_share!=null?pct(st.avg_invested_share,0):""] : null;
+  const pr = []; for(const [k,l] of [["strategy","Strategy"],["buy_all","Buy every eligible IPO"],["screen","Simple screen"]]){ const p = P[k]; if(!p) continue; pr.push(prow(l, p.stats)); pr.push(prow(l+" — same trades in SPY", p.matched_spy_stats)); pr.push(prow(l+" — SPY buy & hold, same window", p.spy_buy_hold_stats)); const a = p.calendar_time_alpha||{}; if(a.alpha_annualized!=null) pr.push([l+" — calendar-time alpha vs SPY", pct(a.alpha_annualized)+"/yr", "t = "+a.alpha_t.toFixed(2), "beta "+a.beta.toFixed(2), "", "", num(a.n_months)+" months", ""]); }
+  table("tblP", ["Account","total return","CAGR","volatility","max drawdown","worst day","trades taken / offered","avg invested"], pr.filter(Boolean));
+  calibChart("ch3", s.calibration); const b = s.brier || {};
+  $("tblC").innerHTML = `<table><tbody><tr><td class=l>Forecasts scored</td><td>${num(b.n)}</td></tr><tr><td class=l>Brier score (lower is better)</td><td>${b.brier!=null?b.brier.toFixed(4):"–"}</td></tr><tr><td class=l>Reference: always forecast the base rate</td><td>${b.brier_base_rate_reference!=null?b.brier_base_rate_reference.toFixed(4):"–"}</td></tr><tr><td class=l>Reference: always forecast 50%</td><td>${b.brier_coinflip_reference!=null?b.brier_coinflip_reference.toFixed(4):"–"}</td></tr><tr><td class=l>Skill vs base rate (above 0 is better than the base rate)</td><td>${b.skill_vs_base_rate!=null?b.skill_vs_base_rate.toFixed(3):"–"}</td></tr><tr><td class=l>Mean forecast / observed rate</td><td>${pct(b.mean_forecast)} / ${pct(b.base_rate)}</td></tr></tbody></table>`
+    + "<table style='margin-top:8px'><thead><tr><th class=l>Bin</th><th>n</th><th>forecast</th><th>observed</th></tr></thead><tbody>"+(s.calibration||[]).map(r=>`<tr><td class=l>${r.bin} (${pct(r.p_lo,0)}–${pct(r.p_hi,0)})</td><td>${r.n}</td><td>${pct(r.mean_forecast)}</td><td>${pct(r.observed_rate)}</td></tr>`).join("")+"</tbody></table>";
+  const by = (key, field) => { const A = (s[key]||{}).strategy||[], Bb = (s[key]||{}).buy_all||[]; const keys = [...new Set([...Bb.map(r=>r[field]), ...A.map(r=>r[field])])].sort(); return keys.map(k => ({k, a:A.find(r=>r[field]===k), b:Bb.find(r=>r[field]===k)})); };
+  const yr = by("by_ipo_year","ipo_year").concat(); const wfy = ($("set").value==="walkforward" && SUMMARY.walk_forward.by_year[mode]) ? SUMMARY.walk_forward.by_year[mode] : null;
+  legend("lg4", [["--s1","Strategy BUYs"],["--s2","Buy every eligible IPO"]]);
+  barChart("ch4", yr.map(r=>String(r.k)), [{name:"Strategy BUYs",color:"--s1",values:yr.map(r=>r.a?r.a.mean_excess:null),n:yr.map(r=>r.a?r.a.n:0)},{name:"Buy every eligible IPO",color:"--s2",values:yr.map(r=>r.b?r.b.mean_excess:null),n:yr.map(r=>r.b?r.b.n:0)}], {label:"mean 12-mo excess vs SPY"});
+  const brk = (el, key, field, title) => table(el, [title,"BUY n","BUY mean excess","BUY % beat SPY","all n","all mean excess","all % beat SPY"], by(key,field).map(r=>[esc(r.k), r.a?num(r.a.n):"0", r.a?pct(r.a.mean_excess):"–", r.a?pct(r.a.pct_outperform):"–", r.b?num(r.b.n):"0", r.b?pct(r.b.mean_excess):"–", r.b?pct(r.b.pct_outperform):"–"]));
+  brk("tblY","by_ipo_year","ipo_year","IPO year"); brk("tblS","by_sector","sector","Sector"); brk("tblR","by_regime","regime","Market conditions at decision");
+  const sens = (SUMMARY.sensitivity||[]).filter(r=>r.mode===mode); $("sensCard").classList.toggle("hide", !sens.length || $("set").value!=="main");
+  table("tblSens", ["Assumption changed","variant","BUY n","BUY mean excess 12m","BUY median excess","BUY % beat SPY","buy-all mean excess","difference"], sens.map(r=>[esc(r.family), esc(r.variant), num(r.n_buy), pct(r.buy_mean_excess_12m), pct(r.buy_median_excess_12m), pct(r.buy_pct_outperform), pct(r.all_mean_excess_12m), pct(r.diff_mean_excess)]));
+  const w = s.winner_dependence_12m || {}; $("win").innerHTML = w.n ? `<table><tbody><tr><td class=l>BUY mean 12-month excess (all ${w.n} trades)</td><td>${pct(w.mean_excess)}</td></tr><tr><td class=l>Median</td><td>${pct(w.median_excess)}</td></tr><tr><td class=l>Without the single best trade</td><td>${pct(w.mean_excess_drop_top1)}</td></tr><tr><td class=l>Without the best 5 trades</td><td>${pct(w.mean_excess_drop_top5)}</td></tr><tr><td class=l>Without the best 5% (${w.top5pct_count} trades)</td><td>${pct(w.mean_excess_drop_top5pct)}</td></tr><tr><td class=l>Winsorised at the 95th percentile</td><td>${pct(w.mean_excess_winsor_95)}</td></tr></tbody></table>` : "";
+}
+function renderCoverage(){
+  const c = SUMMARY.coverage; $("covCard").classList.toggle("hide", !c); if(!c) return;
+  const yrs = Object.entries(c.coverage_by_year||{}); const b = SUMMARY.missing_price_bounds || {};
+  $("cov").innerHTML = `<div class="kpis"><div class="kpi"><b>${num(c.n_eligible)}</b><span>eligible IPOs in this run</span></div><div class="kpi"><b>${pct(c.price_coverage)}</b><span>have price history (${num(c.n_with_price_history)})</span></div><div class="kpi"><b>${num(c.n_eligible-c.n_with_price_history)}</b><span>have no price history: ${Object.entries(c.missing_price_by_sec_outcome||{}).map(([k,v])=>`${k} ${v}`).join(", ")||"–"}</span></div></div>
+   <div class="scroll" style="margin-top:8px"><table><thead><tr><th class=l>IPO year</th>${yrs.map(([y])=>`<th>${y}</th>`).join("")}</tr></thead><tbody><tr><td class=l>eligible</td>${yrs.map(([y,v])=>`<td>${v.eligible}</td>`).join("")}</tr><tr><td class=l>with price history</td>${yrs.map(([y,v])=>`<td>${v.with_price}</td>`).join("")}</tr><tr><td class=l>coverage</td>${yrs.map(([y,v])=>`<td>${pct(v.with_price/v.eligible,0)}</td>`).join("")}</tr></tbody></table></div>`
+   + (Object.keys(b).length ? `<h3>What the missing IPOs could do to the offer-price results (12-month mean excess vs SPY)</h3><div class="scroll"><table><thead><tr><th class=l>Group</th><th>observed n</th><th>missing n</th><th>observed only</th><th>if missing = total loss</th><th>if missing = market return</th><th>if missing = +50% excess</th><th>bankrupt −100%, acquired +25%, others average</th></tr></thead><tbody>${Object.entries(b).map(([k,v])=>`<tr><td class=l>${k==="strategy_buys"?"Strategy BUYs":"Buy every eligible IPO"}</td><td>${v.n_observed}</td><td>${v.n_missing_price}</td><td>${pct(v.mean_excess_observed_only)}</td><td>${pct(v.mean_excess_if_missing_total_loss)}</td><td>${pct(v.mean_excess_if_missing_match_market)}</td><td>${pct(v.mean_excess_if_missing_plus50pct)}</td><td>${pct(v.mean_excess_by_outcome_assumption)}</td></tr>`).join("")}</tbody></table></div>` : "");
+}
+async function loadDecisions(){
+  const run = $("run").value, set = $("set").value === "walkforward" ? "walkforward" : "main", mode = $("mode").value;
+  let d;
+  if(STATIC){ let rows = (STATIC.decisions[run]||{})[set] || []; const q = $("fQ").value.toLowerCase();
+    rows = rows.filter(r => r.mode===mode && (!$("fRec").value || r.recommendation===$("fRec").value) && (!$("fAct").value || r.action===$("fAct").value) && (!q || (r.symbol+" "+r.name).toLowerCase().includes(q)));
+    d = {rows: rows.slice(page*PAGE,(page+1)*PAGE), total: rows.length}; }
+  else d = await api(`/api/runs/${run}/decisions?set=${set}&mode=${mode}&rec=${$("fRec").value}&action=${$("fAct").value}&q=${encodeURIComponent($("fQ").value)}&offset=${page*PAGE}&limit=${PAGE}`);
+  $("pg").textContent = d.total ? `${page*PAGE+1}–${Math.min((page+1)*PAGE,d.total)} of ${d.total}` : "0 rows";
+  const f = x => x === "" || x == null ? null : +x;
+  table("tblD", ["Symbol","Company","Priced","Sector","Recommendation","P(beat SPY)","Action","Waited (days)","Entry","1 mo","3 mo","6 mo","12 mo net","SPY 12 mo","Excess","Outcome status","If bought at once: 12 mo","Gate / reason","Price data"],
+    d.rows.map(r => { const r12 = f(r.strat_ret_12m), s12 = f(r.strat_spy_12m); return [esc(r.symbol), esc((r.name||"").slice(0,34)), esc(r.priced_date), esc(r.sector), `<span class="badge ${esc(r.recommendation)}">${esc(r.recommendation)}</span>`, pct(f(r.probability)), esc(r.action), r.wait_bars>0?r.wait_bars:"", esc(r.strat_entry_date||""), pct(f(r.strat_ret_1m)), pct(f(r.strat_ret_3m)), pct(f(r.strat_ret_6m)), pct(r12), pct(s12), (r12!=null&&s12!=null)?pct(r12-s12):"–", esc(r.strat_status_12m||(r.action==="BUY"?"":"")), pct(f(r.base_ret_12m)), esc(r.gates||r.no_decision_reason||""), esc(r.price_status)+(r.price_status!=="ok"?` (${esc(r.sec_outcome)})`:"")]; }));
+}
+function renderRules(){
+  const led = STATUS.ledger || {freezes:[],unsealings:[]};
+  $("rules").innerHTML = "<table><thead><tr><th class=l>Version</th><th class=l>Hash</th><th class=l>Frozen</th><th class=l>Trained on outcomes known before</th><th class=l>Description</th></tr></thead><tbody>"+(STATUS.rule_versions||[]).map(v=>`<tr><td class=l>${esc(v.version)}</td><td class=l><code>${esc((v.hash||v.error||"").slice(0,24))}</code></td><td class=l>${v.frozen?"✓ "+esc(v.frozen_at):"no"}</td><td class=l>${esc(v.trained_through||"")}</td><td class=l style="white-space:normal">${esc(v.description||"")}</td></tr>`).join("")+"</tbody></table>"
+   + "<h3>Ledger</h3><table><thead><tr><th class=l>Event</th><th class=l>When (UTC)</th><th class=l>Rule hash</th><th class=l>Git commit</th><th class=l>Run</th></tr></thead><tbody>"
+   + led.freezes.map(f=>`<tr><td class=l>rules frozen</td><td class=l>${esc(f.frozen_at)}</td><td class=l><code>${esc(f.rule_hash.slice(0,24))}</code></td><td class=l><code>${esc((f.git_commit_at_freeze||"").slice(0,12))}</code></td><td class=l></td></tr>`).join("")
+   + led.unsealings.map(u=>`<tr><td class=l>test period unsealed</td><td class=l>${esc(u.at)}</td><td class=l><code>${esc(u.rule_hash.slice(0,24))}</code></td><td class=l><code>${esc((u.git_commit||"").slice(0,12))}</code></td><td class=l><code>${esc(u.run_id)}</code></td></tr>`).join("") + "</tbody></table>";
+}
+function renderDownloads(m){
+  $("dl").innerHTML = STATIC ? `<span class="muted">Static export: files are in <code>results/runs/${esc(m.run_id)}/</code> and <code>results/VALIDATION_REPORT.md</code>.</span>`
+    : (m.files||[]).map(f=>`<a class="ghost" style="display:inline-block;margin:0 6px 6px 0;text-decoration:none" href="/download/${m.run_id}/${f}">${f}</a>`).join("") + `<a class="ghost" style="display:inline-block;text-decoration:none" href="/download/VALIDATION_REPORT.md">VALIDATION_REPORT.md</a>`;
+}
+async function loadRun(){
+  const id = $("run").value, m = RUNS.find(r=>r.run_id===id); if(!m) return;
+  SUMMARY = STATIC ? STATIC.summaries[id] : await api(`/api/runs/${id}/summary`);
+  const sets = []; if(SUMMARY.modes) sets.push(["main", m.name==="test"?"Held-out test (frozen rules)":"Main result"]); if(SUMMARY.walk_forward) sets.push(["walkforward","Walk-forward 2016–2025"]);
+  for(const p of Object.keys(SUMMARY.by_period||{})) sets.push(["period:"+p, {dev:"Development 2012–16 (in-sample)",val:"Validation 2017–18 (in-sample)",embargo:"Embargo year 2019 (out-of-sample)"}[p]||p]);
+  $("set").innerHTML = sets.map(s=>`<option value="${s[0]}">${s[1]}</option>`).join("");
+  renderManifest(m); renderMode(); renderCoverage(); renderDownloads(m); page = 0; loadDecisions();
+}
+async function initVal(){
+  STATUS = STATIC ? STATIC.status : await api("/api/status"); RUNS = STATIC ? STATIC.runs : await api("/api/runs");
+  renderStatus(); renderRules();
+  if(!RUNS.length){ $("view-val").innerHTML = '<div class="card">No backtest runs found. Run <code>python -m ipo_app.backtest.run develop</code>.</div>'; return; }
+  const order = {test:0, validation:1, pretest:2}; RUNS.sort((a,b)=>(order[a.name]??9)-(order[b.name]??9));
+  $("run").innerHTML = RUNS.map(r=>`<option value="${r.run_id}">${r.name==="test"?"Held-out test + walk-forward":r.name==="validation"?"Validation period (dev-fitted models)":"Pre-test periods (final rules)"} — ${r.run_id} — rules ${r.rule_version}</option>`).join("");
+  $("run").onchange = loadRun; $("set").onchange = () => { renderMode(); page = 0; loadDecisions(); }; $("mode").onchange = () => { renderMode(); page = 0; loadDecisions(); };
+  for(const i of ["fRec","fAct"]) $(i).onchange = () => { page = 0; loadDecisions(); }; $("fQ").oninput = () => { page = 0; loadDecisions(); };
+  $("prev").onclick = () => { if(page>0){ page--; loadDecisions(); } }; $("next").onclick = () => { page++; loadDecisions(); };
+  await loadRun();
+}
+
+/* ---------- evaluator ---------- */
+const F = {
+ g1:[["name","Company","text"],["exchange","Exchange","select:NASDAQ Global Select|NASDAQ Global|NASDAQ Capital|NYSE|NYSE MKT"],["sic","SIC code","number"],["stage","Decision stage","select:at_ipo|post_report"],["access","Access","select:retail|offer"],["instrument","Instrument","select:common|unit|spac|fund"],["offer_price","Offer price ($)","number"],["price","Price to evaluate ($)","number"],["shares_offered","Shares offered","number"],["secondary_shares","…of which sold by holders","number"],["shares_outstanding_post","Shares outstanding after offering","number"],["overallotment_shares","Over-allotment shares","number"],["overallotment_exercised","Over-allotment exercised","select:false|true"],["underwriting_discount","Underwriting discount (fraction)","number"],["offering_expenses","Offering expenses ($)","number"],["employees","Employees","number"]],
+ g2:[["opt_count","Options (count)","number"],["opt_strike","Options avg strike ($)","number"],["war_count","Warrants (count)","number"],["war_strike","Warrant strike ($)","number"],["rsu_count","RSUs / as-converted shares","number"]],
+ g3:[["revenue","Revenue, annualised ($)","number"],["revenue_prior","Revenue, prior year ($)","number"],["net_income","Net income, annualised ($)","number"],["operating_cash_flow","Operating cash flow, annualised ($)","number"],["cash","Cash and investments ($)","number"],["debt","Debt ($)","number"],["equity","Stockholders' equity ($)","number"],["intangibles","Goodwill + intangibles ($)","number"],["going_concern","Going-concern doubt","select:|false|true"],["financials_age_days","Age of statements (days)","number"],["balance_includes_proceeds","Balance sheet includes IPO proceeds","select:false|true"]],
+ g4:[["vix","VIX","number"],["spy_ret_6m","S&P 500 6-month return (fraction)","number"],["ipo_count_90d","IPOs priced in last 90 days","number"]]};
+const EXAMPLE = {name:"Example Software Co",exchange:"NASDAQ Global Select",sic:7372,stage:"at_ipo",access:"retail",instrument:"common",offer_price:18,price:22.5,shares_offered:12000000,secondary_shares:2000000,shares_outstanding_post:85000000,overallotment_shares:1800000,overallotment_exercised:"false",underwriting_discount:0.07,offering_expenses:4500000,employees:900,opt_count:9000000,opt_strike:6.5,rsu_count:2500000,revenue:240000000,revenue_prior:170000000,net_income:-35000000,operating_cash_flow:-20000000,cash:60000000,debt:25000000,equity:-40000000,intangibles:15000000,going_concern:"false",financials_age_days:75,balance_includes_proceeds:"false",vix:17,spy_ret_6m:0.06,ipo_count_90d:45};
+function buildForm(){ for(const g in F) $(g).innerHTML = F[g].map(([k,l,t]) => `<div><label for="i_${k}">${l}</label>${t.startsWith("select:") ? `<select id="i_${k}">${t.slice(7).split("|").map(o=>`<option value="${o}">${o||"unknown"}</option>`).join("")}</select>` : `<input id="i_${k}" type="${t}" step="any">`}</div>`).join(""); }
+function fill(o){ for(const g in F) for(const [k] of F[g]) $("i_"+k).value = o[k] ?? ""; }
+function collect(){ const b = {}; for(const g of ["g1","g3","g4"]) for(const [k] of F[g]) b[k] = $("i_"+k).value; const d = []; const v = k => $("i_"+k).value;
+  if(v("opt_count")) d.push({count:v("opt_count"),strike:v("opt_strike")||0,kind:"option"}); if(v("war_count")) d.push({count:v("war_count"),strike:v("war_strike")||0,kind:"warrant"}); if(v("rsu_count")) d.push({count:v("rsu_count"),strike:0,kind:"rsu"}); b.dilutive = d; return b; }
+async function runEval(){
+  $("err").textContent = ""; const r = await fetch("/api/evaluate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(collect())}); const e = await r.json();
+  if(e.error){ $("err").textContent = e.error; return; } const m = e.metrics, vs = e.validation_status||{};
+  const fin = x => x === "inf" ? "not burning cash" : (x==null ? "–" : Number(x).toFixed(1)+" months");
+  $("evalOut").innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><div><div class="small muted">Recommendation at ${usd(m.price)}</div><h2 style="font-size:26px;margin:2px 0"><span class="badge ${e.recommendation}" style="font-size:22px;padding:2px 14px">${e.recommendation}</span></h2></div>
+    <div class="kpis" style="flex:1;min-width:300px"><div class="kpi"><b>${pct(e.probability)}</b><span>model probability of beating SPY over 12 months</span></div><div class="kpi"><b>${e.max_buy_price?usd(e.max_buy_price):"none"}</b><span>highest price that would be a BUY</span></div><div class="kpi"><b>${esc(e.rule_version)}</b><span>rule version${e.rules_frozen?" (frozen)":" (not frozen)"} · ${esc(e.model)}</span></div></div></div>
+    <p style="margin:10px 0 0;border-left:4px solid var(--crit);padding-left:10px"><b>${esc(vs.label||"NOT HISTORICALLY VALIDATED")}.</b> ${esc(vs.summary||"")}</p>
+    ${e.reasons.length?`<h3>Why</h3><ul style="margin:0;padding-left:18px">${e.reasons.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</div>
+   <div class="card"><h2>Calculations</h2><div class="scroll"><table><tbody>
+    <tr><td class=l>Offering size</td><td>${usd(m.deal_size)}</td><td class=l>Net cash to the company</td><td>${usd(m.net_primary_proceeds)}</td></tr>
+    <tr><td class=l>Market cap, basic</td><td>${usd(m.market_cap_basic)}</td><td class=l>Market cap, fully diluted</td><td>${usd(m.market_cap_diluted)}</td></tr>
+    <tr><td class=l>Fully diluted shares</td><td>${num(m.fully_diluted_shares)}</td><td class=l>Dilution overhang</td><td>${pct(m.dilution_overhang_pct)}</td></tr>
+    <tr><td class=l>Float</td><td>${pct(m.float_pct)}</td><td class=l>Price vs offer</td><td>${pct(m.return_vs_offer)}</td></tr>
+    <tr><td class=l>Enterprise value</td><td>${usd(m.enterprise_value)}</td><td class=l>EV / sales</td><td>${m.ev_sales==null?"–":m.ev_sales.toFixed(1)+"×"}</td></tr>
+    <tr><td class=l>Revenue growth</td><td>${pct(m.revenue_growth)}</td><td class=l>Net margin</td><td>${pct(m.net_margin)}</td></tr>
+    <tr><td class=l>Pro-forma cash</td><td>${usd(m.pro_forma_cash)}</td><td class=l>Cash runway</td><td>${fin(m.runway_months)}</td></tr>
+    <tr><td class=l>Net tangible book value / share after offering</td><td>${m.ntbv_per_share_post==null?"–":"$"+m.ntbv_per_share_post.toFixed(2)}</td><td class=l>Dilution to new investors</td><td>${pct(m.dilution_to_new_investors_pct)}</td></tr></tbody></table></div></div>
+   <div class="two"><div class="card"><h2>Hard gates</h2><table><tbody>${e.gates.map(g=>`<tr><td class=l>${esc(g.id)}</td><td class=l style="white-space:normal">${esc(g.message)}</td><td>${g.triggered?"✗ triggered → "+g.severity:"✓ passed"}</td></tr>`).join("")}</tbody></table></div>
+   <div class="card"><h2>Recommendation as the price changes</h2><table><thead><tr><th class=l>Price</th><th>Recommendation</th><th>Probability</th><th>EV / sales</th><th>Diluted market cap</th></tr></thead><tbody>${e.price_ladder.map(l=>`<tr><td class=l>${usd(l.price)}</td><td><span class="badge ${l.recommendation}">${l.recommendation}</span></td><td>${pct(l.probability)}</td><td>${l.ev_sales==null?"–":l.ev_sales.toFixed(1)+"×"}</td><td>${usd(l.market_cap_diluted)}</td></tr>`).join("")}</tbody></table></div></div>
+   ${e.contributions?`<div class="card"><h2>What moved the probability</h2><div class="scroll"><table><thead><tr><th class=l>Input</th><th>Value</th><th>Effect on log-odds</th></tr></thead><tbody>${e.contributions.map(c=>`<tr><td class=l>${esc(c.feature)}</td><td>${c.missing?'<span class="muted">missing (imputed)</span>':Number(c.value).toFixed(3)}</td><td>${c.contribution>=0?"+":""}${c.contribution.toFixed(3)}</td></tr>`).join("")}</tbody></table></div></div>`:""}`;
+}
+function tab(which){ $("view-val").classList.toggle("hide", which!=="val"); $("view-eval").classList.toggle("hide", which!=="eval"); $("tab-val").setAttribute("aria-selected", which==="val"); $("tab-eval").setAttribute("aria-selected", which==="eval"); if(which==="val" && SUMMARY) renderMode(); }
+$("tab-val").onclick = () => tab("val"); $("tab-eval").onclick = () => tab("eval");
+buildForm(); $("ex").onclick = () => fill(EXAMPLE); $("clr").onclick = () => fill({}); $("go").onclick = runEval;
+if(STATIC){ $("evalStatic").style.display = "block"; $("evalForm").style.display = "none"; }
+addEventListener("resize", () => { if(SUMMARY) renderMode(); });
+initVal();
+</script>
+</body>
+</html>

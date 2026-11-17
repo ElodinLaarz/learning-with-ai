@@ -1,0 +1,78 @@
+{
+ "snapshot_date": "2026-11-17",
+ "calendar_priced_deals": 4587,
+ "exclusions": {
+  "spac_name_and_10usd_unit": 817,
+  "unit_offering_10usd": 671,
+  "foreign_private_issuer": 565,
+  "offer_price_below_5": 336,
+  "before_universe_start": 62,
+  "no_price": 43,
+  "prior_trading_history": 40,
+  "non_major_exchange": 34,
+  "spac_sic_6770": 29,
+  "fund_or_commodity_pool": 19
+ },
+ "eligible": 1971,
+ "eligible_by_year": {
+  "2012": 118,
+  "2013": 193,
+  "2014": 226,
+  "2015": 138,
+  "2016": 87,
+  "2017": 125,
+  "2018": 143,
+  "2019": 113,
+  "2020": 171,
+  "2021": 314,
+  "2022": 52,
+  "2023": 52,
+  "2024": 74,
+  "2025": 74,
+  "2026": 91
+ },
+ "price_status": {
+  "ok": 1176,
+  "no_yahoo_history": 696,
+  "yahoo_history_starts_late": 99
+ },
+ "price_ok_by_year": {
+  "2012": 40,
+  "2013": 62,
+  "2014": 89,
+  "2015": 63,
+  "2016": 45,
+  "2017": 65,
+  "2018": 90,
+  "2019": 73,
+  "2020": 118,
+  "2021": 212,
+  "2022": 40,
+  "2023": 42,
+  "2024": 73,
+  "2025": 73,
+  "2026": 91
+ },
+ "sec_outcome_all_eligible": {
+  "active": 1256,
+  "acquired": 533,
+  "bankruptcy": 106,
+  "delisted_other": 76
+ },
+ "sec_outcome_when_price_missing": {
+  "acquired": 524,
+  "active": 124,
+  "bankruptcy": 94,
+  "delisted_other": 53
+ },
+ "sec_outcome_when_price_ok": {
+  "active": 1132,
+  "delisted_other": 23,
+  "bankruptcy": 12,
+  "acquired": 9
+ },
+ "first_report_found": 1965,
+ "first_report_with_xbrl": 1531,
+ "shares_outstanding_missing": 21,
+ "pre_ipo_xbrl_available": 96
+}

@@ -1,0 +1,60 @@
+{
+ "run_id": "pretest-da632f63fb",
+ "name": "pretest",
+ "command": "develop",
+ "created_at": "2026-11-17T05:47:48+00:00",
+ "git_commit": "1257435a3dded9ad74db326a2f7d00d981a0dd84",
+ "git_dirty": true,
+ "rule_version": "v1.0.0",
+ "rule_hash": "6a1aac31ace6980416927d477584b96b0f6a3c832a2fa5c9be7341e66eb1d2ac",
+ "rules_frozen": false,
+ "data_hash": "22dc77a8a0861d22f6e755cd5798923c4135d3369aaedf59526068ac303f47c1",
+ "data_built_at": "2026-11-17T05:47:36+00:00",
+ "snapshot_last_market_date": "2026-11-16",
+ "config": {
+  "cost_bps_stock": 25.0,
+  "cost_bps_etf": 2.0,
+  "commission": 0.0,
+  "wait_days": 60,
+  "entry_lag": 1,
+  "entry_at": "open",
+  "delist_haircut": {
+   "bankruptcy": 1.0,
+   "acquired": 0.0,
+   "delisted_other": 0.3,
+   "active": 0.3
+  },
+  "use_diluted": true,
+  "hold_days": 252,
+  "position_frac": 0.05,
+  "max_positions": 20,
+  "start_capital": 100000.0
+ },
+ "periods": {
+  "dev": [
+   "2012-01-01",
+   "2016-12-31"
+  ],
+  "val": [
+   "2017-01-01",
+   "2018-12-31"
+  ],
+  "embargo": [
+   "2019-01-01",
+   "2019-12-31"
+  ],
+  "test": [
+   "2020-01-01",
+   "2099-12-31"
+  ]
+ },
+ "horizons_trading_days": {
+  "1m": 21,
+  "3m": 63,
+  "6m": 126,
+  "12m": 252
+ },
+ "bootstrap_seed": 20261117,
+ "test_period_unsealed": false,
+ "n_decision_rows": 3429
+}
