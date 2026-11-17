@@ -88,18 +88,18 @@ svg text{fill:var(--text2);font-size:11px}
   </div>
   <div class="card"><h2>Net returns at fixed horizons</h2>
     <p class="sub small">Returns are net of spreads/slippage and include dividends, splits and delisting outcomes. "Excess" is versus SPY bought and sold on the same dates. Intervals are 95% bootstrap intervals clustered by entry quarter.</p>
-    <div class="two"><div><div class="legend" id="lg1"></div><svg id="ch1" width="100%" height="250"></svg></div>
-    <div class="scroll" id="tblH"></div></div>
+    <div style="max-width:760px"><div class="legend" id="lg1"></div><svg id="ch1" width="100%" height="250"></svg></div>
+    <div class="scroll" id="tblH"></div>
   </div>
   <div class="card"><h2>Buy recommendations: hits, false positives, missed winners</h2><div id="cls"></div></div>
   <div class="card"><h2>Capital-constrained account</h2>
     <p class="sub small">$100,000 start, 5% of equity per position, at most 20 positions, 12-month holds, idle cash in T-bills. "Same trades in SPY" buys SPY instead of each IPO on the same dates.</p>
-    <div class="two"><div><div class="legend" id="lg2"></div><svg id="ch2" width="100%" height="250"></svg></div><div class="scroll" id="tblP"></div></div>
+    <div style="max-width:760px"><div class="legend" id="lg2"></div><svg id="ch2" width="100%" height="250"></svg></div><div class="scroll" id="tblP"></div>
   </div>
   <div class="card"><h2>Probability calibration</h2><div class="two"><div><svg id="ch3" width="100%" height="250"></svg></div><div class="scroll" id="tblC"></div></div></div>
   <div class="card"><h2>By IPO year, sector and market conditions (12-month excess return vs SPY)</h2>
     <div class="legend" id="lg4"></div><svg id="ch4" width="100%" height="230"></svg>
-    <div class="two"><div class="scroll" id="tblY"></div><div class="scroll" id="tblS"></div></div><div class="scroll" id="tblR"></div></div>
+    <div class="scroll" id="tblY"></div><div class="scroll" id="tblS" style="margin-top:10px"></div><div class="scroll" id="tblR" style="margin-top:10px"></div></div>
   <div class="card" id="sensCard"><h2>Sensitivity and dependence on a few winners</h2><div class="scroll" id="tblSens"></div><div id="win" style="margin-top:10px"></div></div>
   <div class="card" id="covCard"><h2>Data coverage</h2><div id="cov"></div></div>
   <div class="card"><h2>Individual decisions</h2>
@@ -169,7 +169,7 @@ function barChart(id, cats, series, opts={}){
       hit.addEventListener("mouseleave", hideTip); svg.appendChild(hit); }); });
 }
 function lineChart(id, dates, series){
-  const svg = $(id); svg.innerHTML = ""; const W = svg.clientWidth || 520, Hh = +svg.getAttribute("height"), m = {l:52,r:96,t:10,b:24};
+  const svg = $(id); svg.innerHTML = ""; const W = svg.clientWidth || 520, Hh = +svg.getAttribute("height"), m = {l:52,r:124,t:10,b:24};
   const all = series.flatMap(s=>s.values).filter(v=>v!=null); if(!all.length || dates.length < 2){ svg.appendChild(svgEl("text",{x:W/2,y:Hh/2,"text-anchor":"middle"})).textContent = "no trades"; return; }
   const lo = Math.min(...all)*0.97, hi = Math.max(...all)*1.03, n = dates.length;
   const x = i => m.l + i/(n-1)*(W-m.l-m.r), y = v => m.t + (hi-v)/(hi-lo)*(Hh-m.t-m.b);

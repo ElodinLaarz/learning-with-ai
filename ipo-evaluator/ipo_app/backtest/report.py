@@ -113,6 +113,11 @@ def compute_verdict(test_manifest: dict, t: dict) -> dict:
             bits.append(f"the difference versus buying every eligible IPO is {ci(d12)}" + (" (reliably worse)" if h2_neg else ", not distinguishable from zero"))
         summary = ("The evidence does not support an advantage over the benchmarks: " + "; ".join(bits) + "."
                    if bits else "Not every pre-registered guardrail was met.")
+        if h2 and not h1:
+            wf = (((t.get("walk_forward") or {}).get("modes") or {}).get(PRIMARY) or {}).get("diff_vs_buy_all", {}).get("12m") or {}
+            summary += (f" BUY recommendations did lose less than buying every eligible IPO (difference {ci(d12)}), "
+                        "but a smaller loss is not an advantage over the market"
+                        + (f", and the walk-forward difference is {ci(wf)}" if wf.get("estimate") is not None else "") + ".")
     return {"label": label, "verdict": verdict, "summary": summary, "criteria": crit,
             "rule_version": test_manifest["rule_version"], "rule_hash": test_manifest["rule_hash"],
             "run_id": test_manifest["run_id"], "primary_endpoint": "A_retail, 12-month horizon, held-out test period"}
@@ -402,8 +407,10 @@ def write_report():
                 L.append(f"- {m}: BUY n = {r.get('n', 0)}, mean 12-month excess {ci(r.get('excess_ci'))}; buy-all n = {c.get('n', 0)}, mean excess {ci(c.get('excess_ci'))}")
         L.append("")
 
+    n_del = sum((t["modes"][m][g].get(h) or {}).get("n_delisted_before_horizon") or 0
+                for m in t["modes"] for g in ("strategy", "buy_all", "screen") for h in H)
     L.append("## 11. Limitations\n")
-    L.append(LIMITATIONS.format(cov_all=pct(ps.get("ok", 0) / max(cov.get("eligible", 1), 1), 0), cov_test=pct(tc["price_coverage"], 0),
+    L.append(LIMITATIONS.format(n_del=n_del, cov_all=pct(ps.get("ok", 0) / max(cov.get("eligible", 1), 1), 0), cov_test=pct(tc["price_coverage"], 0),
                                 acq=so.get("acquired", 0), acq_ok=sk.get("acquired", 0), bk=so.get("bankruptcy", 0), bk_ok=sk.get("bankruptcy", 0),
                                 pre_xbrl=cov.get("pre_ipo_xbrl_available", "n/a"), elig=cov.get("eligible")))
     L.append("## 12. Reproduce\n")
@@ -426,7 +433,7 @@ LIMITATIONS = """**These limit what the numbers above can be taken to mean. The 
 4. **Author hindsight.** The code was written by a language model whose training data covers this period. Weights and thresholds were fitted mechanically on pre-2020 outcomes and the gates follow listing conventions, but the choice of features, exclusions and model family cannot be proven free of hindsight.
 5. **Mild point-in-time approximations.** SIC codes and the Nasdaq deal record (shares outstanding, employees, expenses) are read as they stand today and are assumed unchanged since the IPO; the first-report decision uses the filing date and assumes the report was public by that day's close; the watchlist re-evaluates with new prices but keeps fundamentals and market conditions fixed at the decision date.
 6. **Execution realism.** Entries use the official open of a daily bar; opening auctions of newly listed stocks can be thin, and 25 bps per side may understate costs for small floats (see the 50 and 100 bps rows). Offer-price access assumes a full allocation in every IPO, which retail investors do not receive, least of all in the deals that open strongly; the offer-price results are an upper bound on what allocation access could have delivered.
-7. **Delisting returns are modelled, not observed.** When a price series ends before a horizon, the position is closed at the last price less a haircut that depends on the SEC-derived reason. Sensitivity rows show the effect of 0% and 100% haircuts.
+7. **Delisting outcomes are implemented but were not exercised by real data.** When a price series ends before a horizon, the position is closed at the last price less a haircut that depends on the SEC-derived reason. In the test period this happened {n_del} times across all groups and horizons: a company that delists loses its entire price history at the vendor, so it drops out of the sample instead of appearing as a delisting. The logic is covered by synthetic-data tests only, which is why the delisting sensitivity rows do not move.
 8. **Sample size and overlap.** Twelve-month windows overlap heavily and IPOs cluster in hot markets (2020–2021 dominate the test period), so the effective number of independent observations is far below the trade count. Intervals are clustered by entry quarter; sub-group tables are descriptive only. Secondary analyses are not adjusted for multiple comparisons.
 9. **Universe.** US-listed operating-company IPOs with an offer price of at least $5. Foreign private issuers, SPACs, units, funds, sub-$5 offerings and uplistings are excluded; conclusions do not extend to them. Sector benchmarks are broad SPDR sector ETFs chosen by SIC code, an approximation (biotechnology IPOs are compared with XLV, for example).
 """

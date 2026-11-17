@@ -47,3 +47,11 @@ Canonical plan for this run. Status lines are appended at the bottom.
   `www.sec.gov/Archives` refuses an anonymous generic client. Consequence: at-IPO decisions are
   reconstructed from deal terms + market state only; full fundamentals enter at the first periodic
   report after the IPO. Downloads running.
+- (1) Data spine DONE: 4,587 priced deals → 1,971 eligible; price history for 1,176 (60%). The gap is the
+  failures and takeovers (acquired 533 → 9 with prices; bankrupt 106 → 12). Named breakage: free price
+  vendor deletes delisted symbols. Best route: survivorship-free price file keyed on universe.csv.
+- (2) Engine DONE, (3) Backtester DONE: 55 tests pass (calculations, dilution, missing data, gates,
+  price sensitivity, point-in-time integrity, seal, statistics).
+- (4) Pre-registration + freeze committed and pushed (d3a9e2c) BEFORE unsealing. Test unsealed once;
+  verdict by the pre-registered rule: NOT SUPPORTED → NOT HISTORICALLY VALIDATED.
+- (5) Dashboard, report, README DONE. Not polished (by plan): visual design, extra vendors, S-1 parsing.

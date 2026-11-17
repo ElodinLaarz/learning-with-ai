@@ -388,7 +388,7 @@ def missing_price_bounds(df: pd.DataFrame, h: str = "12m") -> dict:
     return of each group under explicit assumptions about those unobserved names."""
     d = df[df["mode"] == "A_offer"]
     out = {}
-    for label, g in (("strategy_buys", d[d["recommendation"] == R.BUY]), ("buy_all", d[d["recommendation"].isin([R.BUY, R.WAIT, R.AVOID])])):
+    for label, g in (("strategy_buys", d[d["recommendation"] == R.BUY]), ("buy_all", d)):
         col_r, col_b = ("strat_ret_" + h, "strat_spy_" + h) if label == "strategy_buys" else ("base_ret_" + h, "base_spy_" + h)
         ex = (_col(g, col_r) - _col(g, col_b))
         obs = ex[np.isfinite(ex)]

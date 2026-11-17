@@ -16,3 +16,16 @@ One line each. These are choices, not facts; any of them can be overturned cheap
 | 10 | Delisting before horizon: exit at last traded price with a haircut by reason (bankruptcy −100% floor option, performance −30%, merger 0%) | Shumway (1997) convention; varied in sensitivity | Rule-independent setting in backtest config |
 | 11 | Costs: 25 bps per side on IPO shares (spread + slippage), 2 bps on ETFs, $0 commission; varied 0–100 bps | Early-trading spreads are wide; retail commissions are zero | Backtest config |
 | 12 | Uncertainty: bootstrap clustered by entry quarter + calendar-time portfolio alpha with Newey–West errors | 12-month windows overlap and share market exposure | Stats module |
+
+## After the test period was unsealed (2026-11-17)
+
+Nothing that can change a decision was touched after unsealing: the rule file, its hash and the
+backtest configuration are identical in every recorded test run, and re-running reproduces the same
+run id. Reporting-only changes made after seeing results, listed for transparency:
+
+| # | Change | Effect on results |
+|---|--------|-------------------|
+| 13 | Missing-price bounds table: the "every eligible IPO" row now includes IPOs the engine abstained on, matching the buy-all baseline elsewhere | bounds row n 533 → 546 observed; no change to any pre-registered criterion |
+| 14 | Verdict text adds that H2 (less bad than buy-all) is not an advantage over the market, with the walk-forward figure | wording only |
+| 15 | Limitation 7 now states how many delisting exits were actually observed (none) | wording only |
+| 16 | Dashboard layout: wide tables moved below their charts | presentation only |
