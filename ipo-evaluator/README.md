@@ -8,6 +8,23 @@ with the historical backtest that decides whether it is allowed to call itself v
 > for the actual held-out results, and [`PREREGISTRATION.md`](PREREGISTRATION.md) for the success
 > criteria that were fixed before those results existed. Nothing here is investment advice.
 
+**Result in brief** (run `test-c45c835418`, rules `v1.0.0` frozen before the test, IPOs priced
+2020-01 → 2026-11, primary endpoint = retail entry at the second-day open, 12-month horizon, net of
+costs):
+
+| | n | mean 12-month return | mean excess vs SPY [95%, clustered] | beat SPY |
+|---|--:|--:|--:|--:|
+| App's BUY recommendations | 277 | −11.9% | −25.3% [−36.5%, −10.5%] | 23.5% |
+| Buy every eligible IPO | 546 | −22.0% | −34.7% [−44.0%, −23.9%] | 20.3% |
+| Simple screen (offering ≥ $100M) | 361 | −14.0% | −27.9% [−38.2%, −14.5%] | 23.3% |
+
+The recommendations lost less than buying every IPO (+9.3 points, interval 3.1 to 18.1) but lost
+badly to the market, were not distinguishable from the simple size screen (+2.6 points, interval
+−1.3 to 6.8), and their probabilities were
+worse than a base-rate forecast (Brier skill −0.38). Price history exists for only 78% of
+test-period IPOs because the price source deletes delisted companies, so even these figures
+describe survivors. The pre-registered verdict is **NOT SUPPORTED**.
+
 ## Setup
 
 Python 3.10+.

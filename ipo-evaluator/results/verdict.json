@@ -1,0 +1,51 @@
+{
+ "label": "NOT HISTORICALLY VALIDATED",
+ "verdict": "NOT SUPPORTED",
+ "summary": "The evidence does not support an advantage over the benchmarks: price history exists for only 78% of eligible test-period IPOs, so results describe survivors of the price vendor's database, not all IPOs; BUY recommendations underperformed SPY over 12 months: -25.3% [-36.5%, -10.5%]. BUY recommendations did lose less than buying every eligible IPO (difference 9.3% [3.1%, 18.1%]), but a smaller loss is not an advantage over the market, and the walk-forward difference is 3.2% [-2.1%, 8.9%].",
+ "criteria": [
+  {
+   "name": "H1 \u2014 BUY trades beat SPY over 12 months (95% interval above zero)",
+   "result": "mean excess -25.3% [-36.5%, -10.5%], n = 277",
+   "met": false
+  },
+  {
+   "name": "H2 \u2014 BUY trades beat buying every eligible IPO (95% interval above zero)",
+   "result": "difference 9.3% [3.1%, 18.1%]",
+   "met": true
+  },
+  {
+   "name": "H3 \u2014 Brier score better than the base rate",
+   "result": "Brier 0.2173 vs reference 0.1570 (skill -0.383)",
+   "met": false
+  },
+  {
+   "name": "Guardrail 1 \u2014 at least 30 BUY trades over at least 8 entry quarters",
+   "result": "277 trades, 24 quarters",
+   "met": true
+  },
+  {
+   "name": "Guardrail 2 \u2014 still positive without the best 5% of BUY trades",
+   "result": "-36.6%",
+   "met": false
+  },
+  {
+   "name": "Guardrail 3 \u2014 still positive at 50 bps per side",
+   "result": "-25.8%",
+   "met": false
+  },
+  {
+   "name": "Guardrail 4 \u2014 price history for at least 90% of eligible test-period IPOs",
+   "result": "78.4% (649 of 828)",
+   "met": false
+  },
+  {
+   "name": "Test period was held out (never unsealed with other rules)",
+   "result": "yes",
+   "met": true
+  }
+ ],
+ "rule_version": "v1.0.0",
+ "rule_hash": "6a1aac31ace6980416927d477584b96b0f6a3c832a2fa5c9be7341e66eb1d2ac",
+ "run_id": "test-c45c835418",
+ "primary_endpoint": "A_retail, 12-month horizon, held-out test period"
+}
